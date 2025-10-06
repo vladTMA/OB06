@@ -4,6 +4,7 @@
 # Содержит функции добавления, изменения статуса, удаления и экспорта задач
 from datetime import datetime
 
+
 # Хранилище всех задач и счётчик ID
 tasks_data = []
 task_counter = 1
@@ -42,18 +43,51 @@ def delete_task(task_id: str):
     tasks_data[:] = [t for t in tasks_data if t["id"] !=task_id]
 
 
-# Экспортирует задачи в текстовый файл, сгруппированные по статусам
-def export_tasks_to_file(filename: str = "kanban_export.txt"):
+# Заголовки для txt файла
+COLUMN_TITLES_RU = {
+    "new": "Новые задачи",
+    "executing": "В работе",
+    "testing": "Тестирование",
+    "done": "Завершено"
+}
+
+# Заголовки названий стадий исполнения проекта
+COLUMN_TITLES_RU = {
+    "new": "Новые задачи",
+    "executing": "В работе",
+    "testing": "Тестирование",
+    "done": "Завершено"
+}
+
+# Экспортирует задачи в текстовый файл с заголовком проекта и сроками
+def export_tasks_to_file(
+    filename: str = "kanban_export.txt",
+    project_name: str = "Без названия",
+    deadline_from: str = "",
+    deadline_to: str = ""
+):
     with open(filename, "w", encoding="utf-8") as f:
-        stages = ["new", "executing", "testing", 'done']
+        # Заголовок проекта и срок
+        f.write(f"📌 Проект: {project_name}\n")
+        f.write(f"🗓 Срок исполнения: с {deadline_from} по {deadline_to}\n\n")
+
+        # Задачи по стадиям
+        stages = ["new", "executing", "testing", "done"]
         for stage in stages:
-            f.write(f"=== {stage.upper()} ===\n")
+            title_ru = COLUMN_TITLES_RU.get(stage, f"Стадия: {stage}")
+            f.write(f"{'=' * 10} {title_ru} {'=' * 10}\n")
             for task in tasks_data:
                 if task["status"] == stage:
                     line = f"{task['id']}. {task['text']} ({task['timestamp']})\n"
                     f.write(line)
             f.write("\n")
-            print("Экспортируем задачу:", len(tasks_data))
+
+    print(f"✅ Экспорт завершён: {filename} ({len(tasks_data)} задач)")
+
+
+
+
+
 
 
 

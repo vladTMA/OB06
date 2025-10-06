@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from tkcalendar import DateEntry
-from typing import Optional
+from typing import Optional, Dict, List
 from kanban_logic import add_task, change_status, delete_task, export_tasks_to_file
 
 from datetime import datetime
@@ -115,7 +115,7 @@ def mark_completed():
             completed_listBox.insert(tk.END, f"{updated['id']}. {updated['text']} ({updated['timestamp']})")
 
 
-# Удаляет выбранную задачу из активного списка и из логики
+# Удаляет выбранную задачу из активного списка и из логики.
 def gui_delete_task():
     global active_listbox
     if isinstance(active_listbox, tk.Listbox):
@@ -128,8 +128,8 @@ def gui_delete_task():
 
 
 # Устанавливает активный Listbox для операций (удаление, перемещение и т.д.)
-# в глобальную переменную active_listbox, чтобы другие функции могли работать
-# с текущим выбранным списком задач, независимо от его статуса
+# в глобальную переменную active_listbox, чтобы другие функции могли работать с
+# текущим выбранным списком задач, независимо от его статуса.
 def set_active_listbox(lb):
     global active_listbox
     active_listbox = lb
@@ -151,20 +151,47 @@ def show_full_task(event):
                      bg="Beige", fg="darkgreen", font=("Arial", 14)).pack(padx=20, pady=20)
 
 
+# Создаём класс доски для централизации данных проекта и подготовки к сохранению в текстовый файл
+class KanbanBoard:
+    def __init__(self, project_name: str, deadline_from: str, deadline_to: str):
+        self.project_name = project_name
+        self.deadline_from = deadline_from
+        self.deadline_to = deadline_to
+        self.columns: Dict[str, List[str]] = {
+            "NEW": [],
+            "EXECUTING": [],
+            "DONE": []
+        }
+
+    def add_task(self, column: str, task: str):
+        if column in self.columns:
+            self.columns[column].append(task)
+
+    def get_tasks(self, column: str) -> List[str]:
+        return self.columns.get(column, [])
+
+
 # Экспорт в txt файл
 def export_export():
     print("Кнопка нажата — экспорт начат")
-    # Экспорт в фиксированный файл (для отладки или резервной копии)
-    export_tasks_to_file("kanban_export.txt")
-    print("Экспорт завершён.")
+
+    # Берём значения из шапки проекта
+    project_name = (header.project_name.get() or "Без названия").strip()
+    deadline_from = (header.date_from.get() or "").strip()
+    deadline_to = (header.date_to.get() or "").strip()
 
     # Формируем имя файла с меткой времени
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
     filename = f"kanban_export_{timestamp}.txt"
     full_path = os.path.join(SAVE_DIR, filename)
 
-    # Повторный экспорт в файл с уникальным именем
-    export_tasks_to_file(full_path)
+    # Экспорт в файл с уникальным именем с передачей значений из шапки
+    export_tasks_to_file(
+        filename=full_path,
+        project_name=project_name,
+        deadline_from=deadline_from,
+        deadline_to=deadline_to
+    )
     # Уведомляем об успешном экспорте
     messagebox.showinfo("Экспорт", f"Задачи сохранены в:\n{filename}")
 
@@ -196,22 +223,13 @@ def show_context_menu(event):
     context_menu.tk_popup(event.x_root, event.y_root)
 
 task_entry.bind("<Button-3>", show_context_menu)
+header.project_name.bind("<Button-3>", show_context_menu)
 
+# Ручная вставка
+def paste_clipboard():
+    task_entry.event_generate("<<Paste>>")
 
-# Добавляем ручную вставку текста: Ctrl+V
-# работает только при латинской раскладке клавиатуры
-# (tkinter отслеживает символ, а не физическую клавишу)
-def paste_clipboard(_=None):
-    try:
-        text = root.clipboard_get()
-        task_entry.insert(tk.INSERT, text)
-    except tk.TclError:
-        pass
-
-# Бинды для Ctrl+V — вызывают встроенное событие вставки
-task_entry.bind("<Control-v>", paste_clipboard)
-task_entry.bind("<Control-V>", paste_clipboard)
-
+# Бинды для Ctrl+V
 task_entry.bind("<FocusIn>", lambda e: task_entry.config(bg="lightyellow"))
 task_entry.bind("<FocusOut>", lambda e: task_entry.config(bg="Beige"))
 
@@ -275,7 +293,7 @@ completed_listBox = create_list_row(lists_frame, "Выполнено", "lightgra
 # - при фокусе сохраняем активный список
 # - при двойном клике открываем задачу во всплывающем окне
 for lb in [task_listBox, executing_listBox, testing_listBox, completed_listBox]:
-    lb.bind("<FocusIn>", lambda e, lb=lb: set_active_listbox(lb))
+    lb.bind("<FocusIn>", lambda e, listbox=lb: set_active_listbox(listbox))
     lb.bind("<Double-Button-1>", show_full_task)
 
 
