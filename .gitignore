@@ -1,8 +1,3 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
 # C extensions
 *.so
 
@@ -21,7 +16,6 @@ sdist/
 var/
 wheels/
 share/python-wheels/
-*.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
@@ -56,7 +50,6 @@ cover/
 *.pot
 
 # Django stuff:
-*.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
@@ -127,15 +120,6 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -179,3 +163,22 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# 🐍 Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.log
+
+# 🧪 Virtualenv
+.venv/
+env/
+
+# 🧠 IDE
+.idea/
+.vscode/
+
+# 📦 OS
+.DS_Store
+Thumbs.db
+
